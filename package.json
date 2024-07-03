@@ -3,14 +3,16 @@
   "version": "1.0.0",
   "description": "setup",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "nodemon node src/index.js"
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "mongoose": "^8.4.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
