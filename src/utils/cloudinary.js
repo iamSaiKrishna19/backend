@@ -5,7 +5,7 @@ import fs from "fs"
 await cloudinary.config({ 
     cloud_name: process.env.CLOUD_NAME, 
     api_key: process.env.API_KEY, 
-    api_secret: process.env.API_SECRET // Click 'View Credentials' below to copy your API secret
+    api_secret: process.env.API_SECRET 
 });
 
 
@@ -20,10 +20,13 @@ const uploadfile = async function(localfilelocation){
         })
         console.log("file is uploaded",response)
         return response;
+        fs.unlinkSync(localfilelocation)
     } catch (error) {
         fs.unlinkSync(localfilelocation) // removes the localy saved temporary file
         return null
     }
 }
+
+export {uploadfile}
 
 
