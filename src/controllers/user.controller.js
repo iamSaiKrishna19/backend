@@ -4,6 +4,7 @@ import { validateEmail } from "../utils/validate.js"
 import { User } from "../models/user.model.js"
 import { uploadfile } from "../utils/cloudinary.js"
 import { apiresponse } from "../utils/apiresponse.js"
+import jwt from "jsonwebtoken"
 
 
 const generateAccessAndRefreshToken = async(UserId)=>{
@@ -12,7 +13,7 @@ const generateAccessAndRefreshToken = async(UserId)=>{
         const accessToken = await user.generateAccessToken()
         const refreshToken = await user.generateRefershToken()
 
-        user.refreshToken = accessToken
+        user.refreshToken = refreshToken
         await user.save({validateBeforeSave:false})
 
         return{accessToken,refreshToken}
@@ -159,7 +160,43 @@ const logoutUser  = asyncHandler(async(req,res)=>{
         .json(new apiresponse(200,{},"User logged out!!!"))
 })
 
+const refreshAccessToken = asyncHandler(async(req,res)=>{
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+    if(!incomingRefreshToken){
+        throw new apierror(404,"Kindly login again")
+    }                             
+    
+    try {
+        const decodedtoken = await jwt.verify(incomingRefreshToken,process.env.REFERSEH_TOKEN_SECRET)
+        const user = await User.findById(decodedtoken._id)
+        if(!user){
+            throw new apierror(401,"invalid refresh token")
+        }         
+        if(incomingRefreshToken===user?.refreshToken){
+            throw new apierror(401,"refresh token is expired or used")
+        }
+        const {newrefreshToken,accessToken} = await generateAccessAndRefreshToken(user._id)
+    
+        const options = {
+            httpOnly : true,
+            secure : true
+        }
+    
+        return res.status(200)
+        .cookie("accessToken",accessToken)
+        .cookie("refreshToken",newrefreshToken)
+        .json(
+            new apiresponse(401,
+                {
+                    accessToken, refreshToken : newrefreshToken
+                },
+                "Access token refreshed"
+            )
+        )
+    } catch (error) {
+        throw new apierror(500,error.message || "invalid")
+    }
+})
 
 
-
-export {registerUser,loginUser,logoutUser}
+export {registerUser,loginUser,logoutUser,refreshAccessToken}
