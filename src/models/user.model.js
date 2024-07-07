@@ -80,7 +80,7 @@ userSchema.methods.generateAccessToken = async function (){
 }
 
 userSchema.methods.generateRefershToken = async function (){
-    jwt.sign(
+    return await jwt.sign(
        {
            _id : this._id
        },
