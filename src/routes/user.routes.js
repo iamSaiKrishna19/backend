@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changeAvatar, changeCoverImage, changePassword, loginUser, logoutUser, refreshAccessToken, registerUser } from "../controllers/user.controller.js";
+import { changeAvatar, changeCoverImage, changePassword, forgetPasword, loginUser, logoutUser, refreshAccessToken, registerUser, verifyOTP } from "../controllers/user.controller.js";
 import {upload} from "../middlewars/multer.middleware.js"
 import { verifyJWT } from "../middlewars/auth.middleware.js";
 
@@ -25,4 +25,6 @@ router.route("/refresh-token").post(refreshAccessToken)
 router.route("/update-avatar").post(verifyJWT,upload.single("avatar"),changeAvatar)
 router.route("/update-coverImage").post(verifyJWT,upload.single("coverImage"),changeCoverImage)
 router.route("/update-password").post(verifyJWT,changePassword)
+router.route("/forget-password").post(forgetPasword)
+router.route("/sended/:email").post(verifyOTP)
 export default router

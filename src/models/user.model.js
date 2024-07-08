@@ -50,6 +50,9 @@ const userSchema = new Schema({
     },
     objCoverImage :{
         type : Object
+    },
+    OTP :{
+        type : Number
     }
 
 

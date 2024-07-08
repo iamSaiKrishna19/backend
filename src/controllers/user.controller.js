@@ -5,6 +5,10 @@ import { User } from "../models/user.model.js"
 import { deletfile, uploadfile } from "../utils/cloudinary.js"
 import { apiresponse } from "../utils/apiresponse.js"
 import jwt from "jsonwebtoken"
+import { generateOTP } from "../utils/otpgenerator.js"
+import { sendingmail } from "../utils/nodemailer.js"
+
+
 
 
 const generateAccessAndRefreshToken = async(UserId)=>{
@@ -23,7 +27,13 @@ const generateAccessAndRefreshToken = async(UserId)=>{
     }
 }
 
+const changePass = async(user,newpassword)=>{
 
+    user.password = newpassword
+    user.OTP = null
+    await user.save({validateBeforeSave: false})
+
+}
 
 const registerUser = asyncHandler(async(req,res)=>{
     const {username,email,fullName,password} = req.body
@@ -137,7 +147,6 @@ const loginUser = asyncHandler(async(req,res)=>{
         },"Loged in successfully!!!")
     )
 })
-
 
 const logoutUser  = asyncHandler(async(req,res)=>{
     await User.findByIdAndUpdate(req.user._id,
@@ -281,6 +290,42 @@ const changePassword = asyncHandler(async(req,res)=>{
     .json(new apiresponse(200, {}, "Password changed successfully"))
 })
 
+const forgetPasword = asyncHandler(async(req,res)=>{
+    const {email} = req.body
+    if(!email) throw new apierror(404,"Email is required")
+
+    const user = await User.findOne({email})
+
+    if(!user) throw new apierror(404,"User not found")
+    
+    const OTP = generateOTP()
+
+    user.OTP = OTP
+    await user.save({validateBeforeSave: false})
+
+    sendingmail(email,OTP)
+    return res.status(200)
+    .json(
+        new apiresponse(200,user,"otp send successfully")
+    )
+    
+})
+
+const verifyOTP = asyncHandler(async(req,res)=>{
+    const{email} = req.params
+    const{OTP,newpassword} = req.body
+    const user = await User.findOne({email})
+    console.log(user.OTP)
+
+    if(user.OTP==OTP){
+        await changePass(user,newpassword)
+        console.log("password changed")
+    }
+    else{
+        throw new apierror(400,"OTP is incorrect")
+    }
+
+})
 
 export {registerUser,
         loginUser,
@@ -288,5 +333,7 @@ export {registerUser,
         refreshAccessToken,
         changeAvatar,
         changeCoverImage,
-        changePassword
+        changePassword,
+        forgetPasword,
+        verifyOTP
     }
